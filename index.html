@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CMMC Evidence Platform의 개발 배경, 업무 역할, 시스템 흐름과 설계 원칙을 정리한 발표형 위키.">
+  <title>CMMC Evidence Platform — Development Wiki</title>
+  <style>
+    :root {
+      --green: #01916d; --green-dark: #014937; --green-hover: #006449; --green-pale: #e6f4f0;
+      --ink: #161616; --body: #333; --muted: #5c5c5c; --subtle: #858585; --canvas: #fff;
+      --surface: #f4f4f4; --surface-2: #e8e8e8; --line: #d6d6d6; --line-subtle: #ebebeb;
+      --inverse: #161616; --inverse-surface: #393939; --inverse-muted: #c6c6c6;
+      --orange: #ea5504; --orange-pale: #fff1b8; --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+      --sans: "NanumSquare Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; min-width: 320px; background: var(--canvas); color: var(--body); font-family: var(--sans); font-size: 14px; line-height: 1.6; }
+    body.presentation { overflow: hidden; }
+    a { color: var(--green-hover); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font: inherit; }
+    .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100dvh; }
+    .sidebar { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; background: var(--inverse); color: #fff; border-top: 2px solid var(--green); }
+    .brand { padding: 24px 20px 20px; border-bottom: 1px solid #454545; }
+    .brand-mark { color: var(--green); font: 600 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .brand h1 { margin: 12px 0 6px; font-size: 20px; font-weight: 400; line-height: 1.3; }
+    .brand p { margin: 0; color: var(--inverse-muted); font-size: 12px; line-height: 1.5; }
+    .toc { padding: 18px 0; overflow: auto; }
+    .toc-title { padding: 0 20px 8px; color: var(--inverse-muted); font: 600 11px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+    .toc a { display: block; padding: 8px 20px 8px 18px; border-left: 4px solid transparent; color: #d9d9d9; font-size: 13px; line-height: 1.35; }
+    .toc a:hover, .toc a.active { border-left-color: var(--green); background: var(--inverse-surface); color: #fff; text-decoration: none; }
+    .sidebar-footer { margin-top: auto; padding: 16px 20px 20px; border-top: 1px solid #454545; color: var(--inverse-muted); font-size: 11px; }
+    .sidebar-footer strong { display: block; color: #fff; font-weight: 600; }
+    .workspace { min-width: 0; background: var(--canvas); }
+    .topbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 54px; padding: 0 32px; background: rgba(255,255,255,.96); border-bottom: 1px solid var(--line); }
+    .breadcrumb { color: var(--muted); font: 11px/1.3 var(--mono); letter-spacing: .05em; text-transform: uppercase; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .top-actions button { min-height: 34px; padding: 0 12px; border: 1px solid var(--green); border-radius: 0; background: #fff; color: var(--green-hover); cursor: pointer; font-size: 12px; }
+    .top-actions button:hover, .top-actions button[aria-pressed="true"] { background: var(--green); color: #fff; }
+    .content { max-width: 1240px; margin: 0 auto; padding: 0 48px 72px; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 40px; padding: 72px 0 56px; border-bottom: 1px solid var(--line); }
+    .eyebrow { color: var(--green-hover); font: 600 11px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .hero h2 { max-width: 720px; margin: 14px 0 20px; color: var(--ink); font-size: clamp(30px, 4vw, 50px); font-weight: 400; line-height: 1.16; letter-spacing: -.04em; }
+    .hero-lede { max-width: 690px; margin: 0; color: var(--body); font-size: 17px; line-height: 1.75; }
+    .hero-side { align-self: end; border-left: 4px solid var(--green); padding: 18px 0 18px 20px; }
+    .hero-side strong { display: block; margin-bottom: 8px; color: var(--ink); font-size: 15px; font-weight: 600; }
+    .hero-side p { margin: 0; color: var(--muted); font-size: 13px; }
+    .metric-strip { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); }
+    .metric { min-height: 108px; padding: 20px 18px; border-right: 1px solid var(--line); }
+    .metric:last-child { border-right: 0; }
+    .metric-value { display: block; color: var(--ink); font: 600 24px/1.1 var(--mono); }
+    .metric-label { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .wiki-section { scroll-margin-top: 80px; padding: 68px 0; border-bottom: 1px solid var(--line); }
+    .section-head { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 20px; margin-bottom: 28px; }
+    .section-number { color: var(--green); font: 600 13px/1.3 var(--mono); }
+    .section-head h2 { margin: 0; color: var(--ink); font-size: 27px; font-weight: 400; line-height: 1.25; }
+    .section-head p { max-width: 760px; margin: 10px 0 0; color: var(--muted); font-size: 15px; }
+    .split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+    .panel { min-width: 0; border: 1px solid var(--line); background: #fff; }
+    .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+    .panel-head strong { color: var(--ink); font-size: 14px; font-weight: 600; }
+    .panel-head span { color: var(--subtle); font: 11px/1.3 var(--mono); }
+    .panel-body { padding: 18px; }
+    .panel-body p { margin: 0 0 14px; }
+    .panel-body p:last-child { margin-bottom: 0; }
+    .list { margin: 0; padding: 0; list-style: none; }
+    .list li { position: relative; padding: 9px 0 9px 18px; border-bottom: 1px solid var(--line-subtle); }
+    .list li:last-child { border-bottom: 0; }
+    .list li::before { content: ""; position: absolute; top: 17px; left: 0; width: 6px; height: 6px; background: var(--green); }
+    .callout { margin: 24px 0; padding: 16px 18px; border-left: 4px solid var(--green); background: var(--green-pale); }
+    .callout.warning { border-left-color: var(--orange); background: var(--orange-pale); }
+    .callout strong { color: var(--ink); }
+    .callout p { margin: 4px 0 0; }
+    .role-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); }
+    .role { min-height: 150px; padding: 18px; border-right: 1px solid var(--line); }
+    .role:last-child { border-right: 0; }
+    .role h3 { margin: 0 0 8px; color: var(--ink); font-size: 15px; font-weight: 600; }
+    .role p { margin: 0; color: var(--muted); font-size: 13px; }
+    .screen-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 28px; }
+    .screen-card { margin: 0; border: 1px solid var(--line); background: #fff; }
+    .screen-card img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-bottom: 1px solid var(--line); }
+    .screen-card figcaption { padding: 13px 15px 15px; }
+    .screen-card strong { display: block; color: var(--ink); font-size: 14px; font-weight: 600; }
+    .screen-card span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .archify { margin-top: 28px; border: 1px solid var(--line); background: #10161b; }
+    .archify-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: var(--inverse); color: #fff; }
+    .archify-head strong { font-size: 13px; font-weight: 600; }
+    .archify-head span { color: var(--inverse-muted); font: 11px/1.3 var(--mono); }
+    .archify iframe { display: block; width: 100%; height: 620px; border: 0; background: #10161b; }
+    .principles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); }
+    .principle { padding: 20px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .principle:nth-child(2n) { border-right: 0; }
+    .principle:nth-last-child(-n+2) { border-bottom: 0; }
+    .principle strong { display: block; color: var(--green-hover); font: 600 13px/1.3 var(--mono); }
+    .principle h3 { margin: 8px 0 7px; color: var(--ink); font-size: 17px; font-weight: 600; }
+    .principle p { margin: 0; color: var(--muted); }
+    .timeline { border-left: 1px solid var(--green); }
+    .timeline-item { position: relative; padding: 0 0 26px 24px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item::before { content: ""; position: absolute; top: 6px; left: -5px; width: 9px; height: 9px; background: var(--green); }
+    .timeline-item strong { display: block; color: var(--ink); font-size: 15px; font-weight: 600; }
+    .timeline-item p { margin: 4px 0 0; color: var(--muted); }
+    .next-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
+    .next-item { padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .next-item strong { display: block; color: var(--ink); font-size: 14px; font-weight: 600; }
+    .next-item p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .source-note { padding-top: 28px; color: var(--subtle); font-size: 12px; }
+    .presentation-bar { position: fixed; right: 24px; bottom: 20px; z-index: 8; display: none; gap: 8px; padding: 8px; border: 1px solid var(--line); background: #fff; }
+    body.presentation .presentation-bar { display: flex; }
+    .presentation-bar button { min-height: 34px; padding: 0 12px; border: 1px solid var(--green); border-radius: 0; background: #fff; color: var(--green-hover); cursor: pointer; }
+    .presentation-bar button:hover { background: var(--green); color: #fff; }
+    body.presentation .wiki-section { display: none; min-height: calc(100dvh - 54px); padding-top: 52px; }
+    body.presentation .wiki-section.active { display: block; }
+    body.presentation .content { max-width: 1180px; }
+    @media (max-width: 1050px) {
+      .app { grid-template-columns: 56px minmax(0, 1fr); }
+      .brand { padding: 18px 0; text-align: center; }
+      .brand h1, .brand p, .brand-mark, .toc-title, .sidebar-footer { display: none; }
+      .toc a { height: 42px; padding: 11px 0; border-left-width: 2px; text-align: center; font-size: 0; }
+      .toc a::after { content: attr(data-short); color: #fff; font: 600 11px/1 var(--mono); }
+      .content { padding-right: 32px; padding-left: 32px; }
+    }
+    @media (max-width: 760px) {
+      .app { display: block; }
+      .sidebar { position: static; height: auto; }
+      .brand { padding: 12px 16px; text-align: left; }
+      .brand-mark, .brand h1, .brand p { display: block; }
+      .brand h1 { margin: 5px 0 0; font-size: 17px; }
+      .brand p { display: none; }
+      .toc { display: flex; padding: 0; overflow-x: auto; border-bottom: 1px solid #454545; }
+      .toc-title, .sidebar-footer { display: none; }
+      .toc a { flex: 0 0 auto; height: auto; padding: 10px 12px; border-left: 0; border-bottom: 2px solid transparent; font-size: 12px; text-align: left; }
+      .toc a::after { content: none; }
+      .toc a.active { border-bottom-color: var(--green); }
+      .topbar { padding: 0 16px; }
+      .breadcrumb { font-size: 10px; }
+      .content { padding: 0 16px 48px; }
+      .hero { display: block; padding: 42px 0 36px; }
+      .hero h2 { font-size: 34px; }
+      .hero-side { margin-top: 30px; }
+      .metric-strip { grid-template-columns: repeat(2, 1fr); }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .section-head { display: block; }
+      .section-number { margin-bottom: 9px; }
+      .split, .role-grid, .principles, .next-list, .screen-gallery { grid-template-columns: 1fr; }
+      .role, .principle { border-right: 0; border-bottom: 1px solid var(--line); }
+      .principle:last-child { border-bottom: 0; }
+      .archify iframe { height: 520px; }
+      .presentation-bar { right: 12px; bottom: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="문서 목차">
+      <div class="brand"><div class="brand-mark">CMMC / DEVELOPMENT RECORD</div><h1>Evidence Platform</h1><p>제품 선정 업무가 근거 관리와 협업 플랫폼으로 확장된 과정</p></div>
+      <nav class="toc" id="toc"><div class="toc-title">Wiki index</div><a href="#context" data-short="01">01. 배경과 문제</a><a href="#role" data-short="02">02. 나의 역할</a><a href="#viewer" data-short="03">03. 1차 Viewer</a><a href="#platform" data-short="04">04. 2차 Platform</a><a href="#lifecycle" data-short="05">05. 검토와 발행</a><a href="#documents" data-short="05A">05-A. 문서 근거</a><a href="#system" data-short="06">06. 시스템 구성</a><a href="#security" data-short="07">07. 보안과 권한</a><a href="#principles" data-short="08">08. 설계 원칙</a><a href="#outcome" data-short="09">09. 성과와 다음</a></nav>
+      <div class="sidebar-footer"><strong>작성 기준</strong>2026-09-17<br>2차 플랫폼 staging 배포 완료</div>
+    </aside>
+    <main class="workspace">
+      <header class="topbar"><div class="breadcrumb">CMMC / Evidence Platform / Development Wiki</div><div class="top-actions"><button id="presentation-toggle" type="button" aria-pressed="false">발표 보기</button></div></header>
+      <div class="content">
+        <section class="hero" id="top"><div><div class="eyebrow">From product selection to traceable evidence</div><h2>제품을 고르는 업무에서<br>근거를 발행하는 플랫폼으로</h2><p class="hero-lede">CMMC Level 2 대응을 위해 제품의 기능, 공식 문서, 적용 조건, 검토 결과를 하나의 흐름으로 연결했다. 이 문서는 제품 선정·사양 검토 역할이 어떻게 조직의 재사용 가능한 Evidence Platform 요구사항으로 확장됐는지 설명한다.</p></div><div class="hero-side"><strong>현재 위치</strong><p>1차 단일 HTML Coverage Viewer를 거쳐 2차 다중 사용자 Evidence Platform을 구현하고 staging에 배포했다. 다음 과제는 실제 제품·컨설팅·납품 흐름에 적용해 자산화 효과를 확인하는 것이다.</p></div></section>
+        <div class="metric-strip" aria-label="프로젝트 기준 수치"><div class="metric"><span class="metric-value">14</span><span class="metric-label">CMMC Family</span></div><div class="metric"><span class="metric-value">110</span><span class="metric-label">Requirement</span></div><div class="metric"><span class="metric-value">320</span><span class="metric-label">Assessment Objective</span></div><div class="metric"><span class="metric-value">2 단계</span><span class="metric-label">Viewer → Evidence Platform</span></div></div>
+        <section class="wiki-section" id="context"><div class="section-head"><div class="section-number">01 / CONTEXT</div><div><h2>왜 이 플랫폼이 필요한가</h2><p>컨설팅 진단을 실제 제품 선정과 구축으로 연결하려면, 요구사항 번호만으로는 부족하다. 제품 기능, 공식 근거, 고객 환경의 운영 증적을 분리해서 확인하고 다시 연결해야 한다.</p></div></div><div class="split"><article class="panel"><div class="panel-head"><strong>사업 흐름의 공백</strong><span>WHY</span></div><div class="panel-body"><ul class="list"><li>컨설팅사는 고객 환경에서 개선이 필요한 CMMC 항목을 도출한다.</li><li>FBKR은 그 결과를 공급 가능한 제품, 사양, 구축·운영 조건으로 연결해야 한다.</li><li>하나의 Objective에 여러 제품과 운영 절차가 함께 필요할 수 있다.</li><li>버전·라이선스·설정에 따라 제품의 지원 범위가 달라진다.</li></ul></div></article><article class="panel"><div class="panel-head"><strong>정보 공백의 결과</strong><span>GAP</span></div><div class="panel-body"><p>Objective 번호만 전달되면 어떤 제품을 제안해야 하는지, 기능을 어떤 공식 문서로 설명해야 하는지, 고객 환경에서 남는 Gap이 무엇인지 바로 판단하기 어렵다.</p><div class="callout"><strong>핵심 판단</strong><p>제품의 기능 근거와 고객사의 실제 준수·운영 증적은 같은 것으로 취급하지 않고, 서로 연결하되 별도로 관리해야 한다.</p></div></div></article></div></section>
+        <section class="wiki-section" id="role"><div class="section-head"><div class="section-number">02 / ROLE</div><div><h2>나의 역할은 제품 선정에서 근거 체계 설계로 확장됐다</h2><p>TFT에서 맡은 기본 역할은 제품 선정 및 사양 검토였다. 반복되는 조사와 설명을 조직의 공통 자산으로 바꾸기 위해, 검토 가능한 구조와 업무 흐름까지 정의했다.</p></div></div><div class="role-grid"><article class="role"><h3>제품 선정</h3><p>고객 요구와 CMMC Objective를 기준으로 HW·SW·Service 후보를 좁힌다.</p></article><article class="role"><h3>스펙 검토</h3><p>제품 기능, 적용 조건, 버전·라이선스 범위를 공식 자료와 대조한다.</p></article><article class="role"><h3>근거 구조화</h3><p>Claim, 원문, 문서 버전, 페이지와 Evidence Anchor를 연결한다.</p></article><article class="role"><h3>플랫폼 기준 정의</h3><p>제출·검토·보완·발행·버전 관리가 같은 기준으로 반복되도록 요구사항을 만든다.</p></article></div><div class="archify"><div class="archify-head"><strong>Archify 01 — 제품과 증빙의 관계 정의</strong><span>Object · Claim · Evidence Anchor</span></div><iframe loading="lazy" title="제품과 증빙의 관계 정의" src="01-objective-evidence-model.html"></iframe></div></section>
+        <section class="wiki-section" id="viewer"><div class="section-head"><div class="section-number">03 / PHASE 1</div><div><h2>1차 개발 — Coverage Viewer</h2><p>처음에는 중앙 협업 기능보다, 제품과 CMMC 평가항목의 연결을 한 화면에서 탐색할 수 있는 단일 HTML Viewer에 집중했다.</p></div></div><div class="split"><article class="panel"><div class="panel-head"><strong>첫 번째 해결</strong><span>VIEW</span></div><div class="panel-body"><ul class="list"><li>제품 Catalog와 Objective Coverage Matrix를 한 화면에서 확인</li><li>공식 근거와 가이드 위치를 제품 기능과 함께 탐색</li><li>IndexedDB 기반 로컬 자료 관리</li><li>JSON·HTML Snapshot으로 공유 가능한 검토 결과 생성</li></ul></div></article><article class="panel"><div class="panel-head"><strong>다음 문제가 드러남</strong><span>LIMIT</span></div><div class="panel-body"><p>개인 환경에서의 탐색은 가능했지만, 여러 사용자가 같은 데이터를 보고 제출·검토하려면 중앙 데이터, 역할별 권한, 보완 루프와 발행본이 필요했다.</p><div class="callout warning"><strong>전환 신호</strong><p>“보여주는 Viewer”에서 “검토하고 발행하는 Platform”으로 개발 범위가 바뀌었다.</p></div></div></article></div><div class="archify"><div class="archify-head"><strong>Archify 02 — 1차 개발 Coverage Viewer</strong><span>Catalog → Matrix → Evidence</span></div><iframe loading="lazy" title="Coverage Viewer 흐름" src="02-coverage-viewer.html"></iframe></div></section>
+        <section class="wiki-section" id="platform"><div class="section-head"><div class="section-number">04 / PHASE 2</div><div><h2>2차 개발 — 다중 사용자 Evidence Platform</h2><p>Viewer의 탐색 경험을 유지하면서 중앙 DB, 인증, 업무 권한과 검토·발행 절차를 추가했다. 현재 구현 및 staging 배포가 완료된 실제 운영 기반이다.</p></div></div><div class="role-grid"><article class="role"><h3>Vendor</h3><p>제품과 근거를 등록하고 검토를 요청한다.</p></article><article class="role"><h3>Reviewer</h3><p>원문·적용 조건·Claim을 대조하고 보완 또는 승인한다.</p></article><article class="role"><h3>Consumer</h3><p>권한 범위 안에서 검토 완료된 발행본을 조회한다.</p></article><article class="role"><h3>Admin</h3><p>계정·권한·조직·위임과 감사 기록을 관리한다.</p></article></div><div class="screen-gallery" aria-label="주요 역할 화면"><figure class="screen-card"><img src="screens/vendor.png" alt="Vendor 제품 작업 화면 1280 x 720"><figcaption><strong>Vendor · 제품 작업 화면</strong><span>Object, Objective, 공식 원문과 제품 파일을 등록하는 화면</span></figcaption></figure><figure class="screen-card"><img src="screens/reviewer.png" alt="Reviewer 검토 화면 1280 x 720"><figcaption><strong>Reviewer · 검토 화면</strong><span>Evidence Anchor와 검토 의견을 대조하고 보완을 요청하는 화면</span></figcaption></figure><figure class="screen-card"><img src="screens/published-viewer.png" alt="Consumer 발행 Viewer 화면 1280 x 720"><figcaption><strong>Consumer · 발행 Viewer</strong><span>권한 범위 안에서 발행본과 Coverage Matrix를 조회하는 화면</span></figcaption></figure><figure class="screen-card"><img src="screens/pdf-search-geometry.png" alt="문서 검색과 근거 위치 확인 화면 1280 x 720"><figcaption><strong>공통 · 문서 근거 확인</strong><span>문서 페이지, 검색 결과와 Evidence Anchor를 확인하는 화면</span></figcaption></figure></div><div class="callout"><strong>화면 자료 기준</strong><p>아래 화면은 실제 프론트엔드에서 1280×720(16:9) 비율로 렌더링된 자료다. Admin은 계정·권한·위임·감사 기능을 중심으로 설명하고, 전용 캡처가 확보되면 같은 화면 자료 영역에 추가한다.</p></div><div class="callout"><strong>업무 흐름</strong><p>제품 등록 → 자료 확보 → 근거 연결 → 제출 → 검토 → 보완 또는 최종 승인 → 발행. 보완이 필요하면 제출자가 수정한 뒤 같은 검토 절차로 재제출한다.</p></div><div class="archify"><div class="archify-head"><strong>Archify 03 — 다중 사용자 Evidence Platform</strong><span>Vendor · Reviewer · Consumer · Admin</span></div><iframe loading="lazy" title="Evidence Platform 흐름" src="03-evidence-platform.html"></iframe></div></section>
+        <section class="wiki-section" id="lifecycle"><div class="section-head"><div class="section-number">05 / LIFECYCLE</div><div><h2>자료·검토 주기·발행 버전을 분리한다</h2><p>제품 파일을 올리는 행위와 증빙을 제출하는 행위, 검토 완료본을 발행하는 행위는 서로 다른 상태 변화다. 이 셋을 분리해야 기존 발행본을 보존하면서 자료를 계속 축적할 수 있다.</p></div></div><div class="timeline"><div class="timeline-item"><strong>제품 파일 보관함</strong><p>활성 제품에는 검토·발행 상태와 관계없이 공식 자료를 추가할 수 있다. 업로드만으로 제출이나 새 발행본이 만들어지지는 않는다.</p></div><div class="timeline-item"><strong>증빙 검토 주기</strong><p>자료를 실제 증빙으로 사용하려면 Objective와 연결하고, 추가 근거·연결 삭제 요청도 검토 대상으로 만든다.</p></div><div class="timeline-item"><strong>발행 버전</strong><p>최종 승인 시 승인된 변경을 반영한 Snapshot을 생성한다. 일반 수정은 기존 발행본을 덮어쓰지 않는다.</p></div></div><div class="archify"><div class="archify-head"><strong>Archify 04 — 제품 자료·검토 주기·발행 버전</strong><span>Source · Review Cycle · Release</span></div><iframe loading="lazy" title="자료와 발행 버전 흐름" src="04-version-separation.html"></iframe></div></section>
+        <section class="wiki-section" id="documents"><div class="section-head"><div class="section-number">05-A / SOURCE</div><div><h2>문서와 근거 위치를 검토 가능한 상태로 만든다</h2><p>제품 기능을 설명하는 문서와 정확한 근거 위치가 연결되어야 검토자와 협력사가 같은 자료를 다시 확인할 수 있다.</p></div></div><div class="split"><article class="panel"><div class="panel-head"><strong>관리하는 정보</strong><span>TRACE</span></div><div class="panel-body"><ul class="list"><li>공식 원문 파일과 문서 버전</li><li>PDF·이미지 기반 페이지와 Evidence Anchor</li><li>Claim, 검토 의견, 판정과 변경 이력</li><li>DOCX 원본과 공통 조회용 PDF·구조 정보</li></ul></div></article><article class="panel"><div class="panel-head"><strong>남아 있는 검증 과제</strong><span>QUALITY</span></div><div class="panel-body"><p>DOCX 변환 결과의 원본 배치 재현성은 문서별 차이가 있다. 원문 보존, 변환 품질, 조회 성능을 함께 확인하며 지속 개선 대상으로 관리한다.</p></div></article></div><div class="archify"><div class="archify-head"><strong>Archify 05 — 문서와 근거 위치 관리</strong><span>Source → Page → Evidence Anchor</span></div><iframe loading="lazy" title="문서와 근거 위치 흐름" src="05-document-anchor.html"></iframe></div></section>
+        <section class="wiki-section" id="system"><div class="section-head"><div class="section-number">06 / SYSTEM</div><div><h2>Cloudflare와 Supabase로 3-Tier를 구성했다</h2><p>브라우저·애플리케이션·데이터의 경계를 분리하고, 브라우저는 같은 사이트의 API만 호출하도록 구성했다. 배포는 GitHub Actions를 통해 반복 가능하게 만들었다.</p></div></div><div class="split"><article class="panel"><div class="panel-head"><strong>논리 구성</strong><span>3-TIER</span></div><div class="panel-body"><ul class="list"><li>Presentation — Cloudflare Pages 기반 웹 화면</li><li>Application — Cloudflare Workers 기반 API와 업무 처리</li><li>Data — Supabase PostgreSQL, Auth, Private Storage</li><li>DOCX 변환 — Queue와 Browser Rendering</li></ul></div></article><article class="panel"><div class="panel-head"><strong>배포 흐름</strong><span>CI/CD</span></div><div class="panel-body"><ul class="list"><li>PR에서 테스트·빌드·DB 권한·브라우저 동작 검증</li><li>main 반영 후 migration·Worker·Pages 배포</li><li>2026-09-15 최신 확인 배포에서 검증 및 배포 성공</li></ul></div></article></div><div class="archify"><div class="archify-head"><strong>Archify 06 — 시스템 구성과 배포</strong><span>Pages · Workers · Supabase · GitHub Actions</span></div><iframe loading="lazy" title="시스템 구성과 배포 흐름" src="06-system-deployment.html"></iframe></div></section>
+        <section class="wiki-section" id="security"><div class="section-head"><div class="section-number">07 / SECURITY</div><div><h2>진입·인증·데이터 권한을 세 겹으로 나눈다</h2><p>제품 근거와 검토 결과가 조직 자산이 될수록, 누구를 들일지와 무엇을 할 수 있는지를 분리해 판단해야 한다.</p></div></div><div class="principles"><article class="principle"><strong>GATE 01</strong><h3>Cloudflare Access Email OTP</h3><p>허용된 이메일 사용자가 사이트에 진입하도록 제한한다.</p></article><article class="principle"><strong>GATE 02</strong><h3>Supabase Auth</h3><p>등록·활성화된 사용자 계정으로 업무 기능에 접근한다.</p></article><article class="principle"><strong>GATE 03</strong><h3>업무 권한과 PostgreSQL RLS</h3><p>역할·조직·Workspace·소유 관계와 배정 조건에 따라 데이터 접근과 작업 범위를 제한한다.</p></article><article class="principle"><strong>AUDIT</strong><h3>Private Storage와 감사 이력</h3><p>원문과 변환 산출물은 비공개로 보관하고 주요 변경·판정의 처리 주체와 과정을 남긴다.</p></article></div><div class="archify"><div class="archify-head"><strong>Archify 07 — 보안과 업무 권한</strong><span>OTP · Auth · RLS · Audit</span></div><iframe loading="lazy" title="보안과 업무 권한 흐름" src="07-security-gates.html"></iframe></div></section>
+        <section class="wiki-section" id="principles"><div class="section-head"><div class="section-number">08 / PRINCIPLES</div><div><h2>플랫폼은 다섯 가지 원칙으로 판단한다</h2><p>기능 목록보다 중요한 것은 근거가 어디서 왔고, 어떤 검토를 통과했으며, 누구에게 어떤 발행본으로 제공되는지 설명할 수 있는가이다.</p></div></div><div class="principles"><article class="principle"><strong>01</strong><h3>Traceable Evidence</h3><p>제품의 지원 설명에서 공식 원문과 정확한 근거 위치까지 추적한다.</p></article><article class="principle"><strong>02</strong><h3>Immutable Publication</h3><p>검토 완료본을 발행 시점의 Snapshot으로 보존한다.</p></article><article class="principle"><strong>03</strong><h3>Atomic Publication</h3><p>검증·발행 데이터 생성·현재 발행본 전환을 하나의 transaction으로 처리한다.</p></article><article class="principle"><strong>04</strong><h3>Versioned Review</h3><p>추가·변경된 근거도 동일한 제출·검토 절차를 거쳐 새 버전에 반영한다.</p></article><article class="principle"><strong>05</strong><h3>Shared View</h3><p>권한 범위 안에서 팀이 같은 기준과 발행 결과를 확인한다.</p></article><article class="principle"><strong>BOUNDARY</strong><h3>제품 근거 ≠ 고객 인증</h3><p>제품 Capability와 공식 근거는 고객사의 실제 준수·운영 증적과 구분해 관리한다.</p></article></div><div class="archify"><div class="archify-head"><strong>Archify 08 — 플랫폼의 설계 원칙</strong><span>Trace · Version · Atomic · Shared</span></div><iframe loading="lazy" title="플랫폼 설계 원칙 흐름" src="08-platform-principles.html"></iframe></div></section>
+        <section class="wiki-section" id="outcome"><div class="section-head"><div class="section-number">09 / OUTCOME</div><div><h2>현재 성과와 다음 검증</h2><p>플랫폼 개발은 제품 선정 업무를 대체하기 위한 것이 아니라, 판단 근거를 반복해서 사용할 수 있는 조직 자산으로 만드는 작업이다.</p></div></div><div class="split"><article class="panel"><div class="panel-head"><strong>현재까지</strong><span>SO</span></div><div class="panel-body"><ul class="list"><li>단일 HTML Coverage Viewer 개발 및 배포</li><li>다중 사용자 Evidence Platform 구현 및 staging 배포</li><li>제품 등록·문서 관리·근거 지정·제출·검토·보완·발행 흐름 구현</li><li>제품 파일 보관함과 증빙 검토 주기 분리</li><li>보성공업 대상 UTM·NAS·M365 1차 납품 완료</li></ul></div></article><article class="panel"><div class="panel-head"><strong>다음 단계</strong><span>NEXT</span></div><div class="panel-body"><ul class="list"><li>FBKR 유통·구축 가능 제품의 공식 근거 우선 확보</li><li>DSNK Workshop에서 진단 결과와 제안 기준 구체화</li><li>실제 제조사·검토자 협업에 플랫폼 적용</li><li>검토 완료 제품 수, 재사용 근거 수, 발행 소요시간 측정</li><li>제안–납품–구축–운영 과정을 성공사례로 기록</li></ul></div></article></div><div class="callout"><strong>이 문서의 결론</strong><p>내 역할은 “제품을 고르는 사람”에 머물지 않고, 제품의 기능과 공식 근거를 검토 가능한 형태로 만들고, 팀이 같은 발행 결과를 재사용하도록 하는 기준을 정의하는 일로 확장됐다.</p></div><div class="source-note">작성 기준 2026-09-17 · 원문: 01-작업공유-CMMC.md · 흐름도: Archify 기반 8개 개발·운영 단계</div></section>
+      </div>
+    </main>
+  </div>
+  <div class="presentation-bar" aria-label="발표 탐색"><button id="prev-slide" type="button">이전</button><button id="next-slide" type="button">다음</button><button id="exit-presentation" type="button">위키로 돌아가기</button></div>
+  <script>
+    const sectionIds = ['context', 'role', 'viewer', 'platform', 'lifecycle', 'documents', 'system', 'security', 'principles', 'outcome'];
+    const sections = sectionIds.map(id => document.getElementById(id));
+    const tocLinks = [...document.querySelectorAll('.toc a')]; let slide = 0;
+    const setActive = index => { slide = Math.max(0, Math.min(sections.length - 1, index)); tocLinks.forEach((link, i) => link.classList.toggle('active', i === slide)); sections.forEach((section, i) => section.classList.toggle('active', i === slide)); if (document.body.classList.contains('presentation')) sections[slide].scrollIntoView({ block: 'start' }); };
+    const enterPresentation = () => { document.body.classList.add('presentation'); document.getElementById('presentation-toggle').setAttribute('aria-pressed', 'true'); setActive(slide); };
+    const exitPresentation = () => { document.body.classList.remove('presentation'); document.getElementById('presentation-toggle').setAttribute('aria-pressed', 'false'); sections[slide].scrollIntoView({ block: 'start' }); };
+    document.getElementById('presentation-toggle').addEventListener('click', () => document.body.classList.contains('presentation') ? exitPresentation() : enterPresentation());
+    document.getElementById('exit-presentation').addEventListener('click', exitPresentation); document.getElementById('prev-slide').addEventListener('click', () => setActive(slide - 1)); document.getElementById('next-slide').addEventListener('click', () => setActive(slide + 1));
+    tocLinks.forEach((link, i) => link.addEventListener('click', event => { if (document.body.classList.contains('presentation')) { event.preventDefault(); setActive(i); } }));
+    const observer = new IntersectionObserver(entries => { if (document.body.classList.contains('presentation')) return; const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]; if (visible) setActive(sectionIds.indexOf(visible.target.id)); }, { rootMargin: '-20% 0px -65% 0px', threshold: [0, .2, .5] });
+    sections.forEach(section => observer.observe(section)); setActive(0);
+  </script>
+</body>
+</html>

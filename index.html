@@ -89,6 +89,10 @@
     .archify-head strong { font-size: 13px; font-weight: 600; }
     .archify-head span { color: var(--inverse-muted); font: 11px/1.3 var(--mono); }
     .archify iframe { display: block; width: 100%; height: 620px; border: 0; background: #10161b; }
+    .video-wrap { margin-top: 28px; border: 1px solid var(--line); background: #000; }
+    .video-wrap video { display: block; width: 100%; max-height: 75vh; height: auto; background: #000; }
+    .video-meta { padding: 12px 16px; border-top: 1px solid #333; background: var(--inverse); color: var(--inverse-muted); font-size: 12px; }
+    .video-meta strong { color: #fff; font-weight: 600; }
     .principles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); }
     .principle { padding: 20px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
     .principle:nth-child(2n) { border-right: 0; }
@@ -157,7 +161,7 @@
   <div class="app">
     <aside class="sidebar" aria-label="문서 목차">
       <div class="brand"><div class="brand-mark">CMMC / DEVELOPMENT RECORD</div><h1>Evidence Platform</h1><p>제품 선정 업무가 근거 관리와 협업 플랫폼으로 확장된 과정</p></div>
-      <nav class="toc" id="toc"><div class="toc-title">Wiki index</div><a href="#context" data-short="01">01. 배경과 문제</a><a href="#role" data-short="02">02. 나의 역할</a><a href="#viewer" data-short="03">03. 1차 Viewer</a><a href="#platform" data-short="04">04. 2차 Platform</a><a href="#lifecycle" data-short="05">05. 검토와 발행</a><a href="#documents" data-short="05A">05-A. 문서 근거</a><a href="#system" data-short="06">06. 시스템 구성</a><a href="#security" data-short="07">07. 보안과 권한</a><a href="#principles" data-short="08">08. 설계 원칙</a><a href="#outcome" data-short="09">09. 성과와 다음</a></nav>
+      <nav class="toc" id="toc"><div class="toc-title">Wiki index</div><a href="#context" data-short="01">01. 배경과 문제</a><a href="#role" data-short="02">02. 나의 역할</a><a href="#viewer" data-short="03">03. 1차 Viewer</a><a href="#platform" data-short="04">04. 2차 Platform</a><a href="#lifecycle" data-short="05">05. 검토와 발행</a><a href="#documents" data-short="05A">05-A. 문서 근거</a><a href="#system" data-short="06">06. 시스템 구성</a><a href="#security" data-short="07">07. 보안과 권한</a><a href="#principles" data-short="08">08. 설계 원칙</a><a href="#video" data-short="08A">08-A. 데모 영상</a><a href="#outcome" data-short="09">09. 성과와 다음</a></nav>
       <div class="sidebar-footer"><strong>작성 기준</strong>2026-09-17<br>2차 플랫폼 staging 배포 완료</div>
     </aside>
     <main class="workspace">
@@ -174,13 +178,29 @@
         <section class="wiki-section" id="system"><div class="section-head"><div class="section-number">06 / SYSTEM</div><div><h2>Cloudflare와 Supabase로 3-Tier를 구성했다</h2><p>브라우저·애플리케이션·데이터의 경계를 분리하고, 브라우저는 같은 사이트의 API만 호출하도록 구성했다. 배포는 GitHub Actions를 통해 반복 가능하게 만들었다.</p></div></div><div class="split"><article class="panel"><div class="panel-head"><strong>논리 구성</strong><span>3-TIER</span></div><div class="panel-body"><ul class="list"><li>Presentation — Cloudflare Pages 기반 웹 화면</li><li>Application — Cloudflare Workers 기반 API와 업무 처리</li><li>Data — Supabase PostgreSQL, Auth, Private Storage</li><li>DOCX 변환 — Queue와 Browser Rendering</li></ul></div></article><article class="panel"><div class="panel-head"><strong>배포 흐름</strong><span>CI/CD</span></div><div class="panel-body"><ul class="list"><li>PR에서 테스트·빌드·DB 권한·브라우저 동작 검증</li><li>main 반영 후 migration·Worker·Pages 배포</li><li>2026-09-15 최신 확인 배포에서 검증 및 배포 성공</li></ul></div></article></div><div class="archify"><div class="archify-head"><strong>Archify 06 — 시스템 구성과 배포</strong><span>Pages · Workers · Supabase · GitHub Actions</span></div><iframe loading="lazy" title="시스템 구성과 배포 흐름" src="06-system-deployment.html"></iframe></div></section>
         <section class="wiki-section" id="security"><div class="section-head"><div class="section-number">07 / SECURITY</div><div><h2>진입·인증·데이터 권한을 세 겹으로 나눈다</h2><p>제품 근거와 검토 결과가 조직 자산이 될수록, 누구를 들일지와 무엇을 할 수 있는지를 분리해 판단해야 한다.</p></div></div><div class="principles"><article class="principle"><strong>GATE 01</strong><h3>Cloudflare Access Email OTP</h3><p>허용된 이메일 사용자가 사이트에 진입하도록 제한한다.</p></article><article class="principle"><strong>GATE 02</strong><h3>Supabase Auth</h3><p>등록·활성화된 사용자 계정으로 업무 기능에 접근한다.</p></article><article class="principle"><strong>GATE 03</strong><h3>업무 권한과 PostgreSQL RLS</h3><p>역할·조직·Workspace·소유 관계와 배정 조건에 따라 데이터 접근과 작업 범위를 제한한다.</p></article><article class="principle"><strong>AUDIT</strong><h3>Private Storage와 감사 이력</h3><p>원문과 변환 산출물은 비공개로 보관하고 주요 변경·판정의 처리 주체와 과정을 남긴다.</p></article></div><div class="archify"><div class="archify-head"><strong>Archify 07 — 보안과 업무 권한</strong><span>OTP · Auth · RLS · Audit</span></div><iframe loading="lazy" title="보안과 업무 권한 흐름" src="07-security-gates.html"></iframe></div></section>
         <section class="wiki-section" id="principles"><div class="section-head"><div class="section-number">08 / PRINCIPLES</div><div><h2>플랫폼은 다섯 가지 원칙으로 판단한다</h2><p>기능 목록보다 중요한 것은 근거가 어디서 왔고, 어떤 검토를 통과했으며, 누구에게 어떤 발행본으로 제공되는지 설명할 수 있는가이다.</p></div></div><div class="principles"><article class="principle"><strong>01</strong><h3>Traceable Evidence</h3><p>제품의 지원 설명에서 공식 원문과 정확한 근거 위치까지 추적한다.</p></article><article class="principle"><strong>02</strong><h3>Immutable Publication</h3><p>검토 완료본을 발행 시점의 Snapshot으로 보존한다.</p></article><article class="principle"><strong>03</strong><h3>Atomic Publication</h3><p>검증·발행 데이터 생성·현재 발행본 전환을 하나의 transaction으로 처리한다.</p></article><article class="principle"><strong>04</strong><h3>Versioned Review</h3><p>추가·변경된 근거도 동일한 제출·검토 절차를 거쳐 새 버전에 반영한다.</p></article><article class="principle"><strong>05</strong><h3>Shared View</h3><p>권한 범위 안에서 팀이 같은 기준과 발행 결과를 확인한다.</p></article><article class="principle"><strong>BOUNDARY</strong><h3>제품 근거 ≠ 고객 인증</h3><p>제품 Capability와 공식 근거는 고객사의 실제 준수·운영 증적과 구분해 관리한다.</p></article></div><div class="archify"><div class="archify-head"><strong>Archify 08 — 플랫폼의 설계 원칙</strong><span>Trace · Version · Atomic · Shared</span></div><iframe loading="lazy" title="플랫폼 설계 원칙 흐름" src="08-platform-principles.html"></iframe></div></section>
+        <section class="wiki-section" id="video">
+          <div class="section-head">
+            <div class="section-number">08-A / VIDEO</div>
+            <div>
+              <h2>플랫폼 데모 영상</h2>
+              <p>CMMC Evidence Platform의 실제 화면과 주요 동작 흐름을 영상으로 확인한다.</p>
+            </div>
+          </div>
+          <div class="video-wrap">
+            <video controls preload="metadata" playsinline>
+              <source src="./cmmc-platform-demo-motion-ko.mp4" type="video/mp4">
+              브라우저가 MP4 영상을 재생하지 못합니다. cmmc-platform-demo-motion-ko.mp4 파일이 index.html과 같은 폴더에 있는지 확인하세요.
+            </video>
+            <div class="video-meta"><strong>Video source</strong> · cmmc-platform-demo-motion-ko.mp4 · index.html과 같은 디렉터리 기준 상대경로</div>
+          </div>
+        </section>
         <section class="wiki-section" id="outcome"><div class="section-head"><div class="section-number">09 / OUTCOME</div><div><h2>현재 성과와 다음 검증</h2><p>플랫폼 개발은 제품 선정 업무를 대체하기 위한 것이 아니라, 판단 근거를 반복해서 사용할 수 있는 조직 자산으로 만드는 작업이다.</p></div></div><div class="split"><article class="panel"><div class="panel-head"><strong>현재까지</strong><span>SO</span></div><div class="panel-body"><ul class="list"><li>단일 HTML Coverage Viewer 개발 및 배포</li><li>다중 사용자 Evidence Platform 구현 및 staging 배포</li><li>제품 등록·문서 관리·근거 지정·제출·검토·보완·발행 흐름 구현</li><li>제품 파일 보관함과 증빙 검토 주기 분리</li><li>보성공업 대상 UTM·NAS·M365 1차 납품 완료</li></ul></div></article><article class="panel"><div class="panel-head"><strong>다음 단계</strong><span>NEXT</span></div><div class="panel-body"><ul class="list"><li>FBKR 유통·구축 가능 제품의 공식 근거 우선 확보</li><li>DSNK Workshop에서 진단 결과와 제안 기준 구체화</li><li>실제 제조사·검토자 협업에 플랫폼 적용</li><li>검토 완료 제품 수, 재사용 근거 수, 발행 소요시간 측정</li><li>제안–납품–구축–운영 과정을 성공사례로 기록</li></ul></div></article></div><div class="callout"><strong>이 문서의 결론</strong><p>내 역할은 “제품을 고르는 사람”에 머물지 않고, 제품의 기능과 공식 근거를 검토 가능한 형태로 만들고, 팀이 같은 발행 결과를 재사용하도록 하는 기준을 정의하는 일로 확장됐다.</p></div><div class="source-note">작성 기준 2026-09-17 · 원문: 01-작업공유-CMMC.md · 흐름도: Archify 기반 8개 개발·운영 단계</div></section>
       </div>
     </main>
   </div>
   <div class="presentation-bar" aria-label="발표 탐색"><button id="prev-slide" type="button">이전</button><button id="next-slide" type="button">다음</button><button id="exit-presentation" type="button">위키로 돌아가기</button></div>
   <script>
-    const sectionIds = ['context', 'role', 'viewer', 'platform', 'lifecycle', 'documents', 'system', 'security', 'principles', 'outcome'];
+    const sectionIds = ['context', 'role', 'viewer', 'platform', 'lifecycle', 'documents', 'system', 'security', 'principles', 'video', 'outcome'];
     const sections = sectionIds.map(id => document.getElementById(id));
     const tocLinks = [...document.querySelectorAll('.toc a')]; let slide = 0;
     const setActive = index => { slide = Math.max(0, Math.min(sections.length - 1, index)); tocLinks.forEach((link, i) => link.classList.toggle('active', i === slide)); sections.forEach((section, i) => section.classList.toggle('active', i === slide)); if (document.body.classList.contains('presentation')) sections[slide].scrollIntoView({ block: 'start' }); };
